@@ -8,7 +8,6 @@ import {
 import { formatPrice } from "../Data/FoodData";
 import { getPrice } from "../FoodDialog/FoodDialog";
 
-
 const OrderStyled = styled.div`
 position: fixed;
 right: 0px;
@@ -30,7 +29,18 @@ height: 100%;
 const OrderContainer = styled.div`
 padding: 10px 0px;
 border-bottom: 1px solid grey;
+${({ editable }) =>
+editable
+    ? `
+&:hover {
+    cursor: pointer;
+    background-color: #e7e7e7;
+}
 `
+: `
+pointer-events: none; 
+    `}
+`;
 
 const OrderItem = styled.div`
 padding: 10px 0px;
@@ -44,12 +54,19 @@ color: gray;
 font-size: 10px;
 `
 
-export function Order({ orders }) {
+export function Order({ orders, setOrders, setOpenFood}) {
     const subtotal = orders.reduce((total, order) => {
         return total + getPrice(order);
     }, 0);
     const tax = subtotal * 0.07;
     const total = subtotal + tax;
+
+    const deleteItem = index => {
+        const newOrders = [...orders];
+        newOrders.splice(index, 1);
+        setOrders(newOrders);
+    }
+
     return (
         <OrderStyled>
             {orders.length === 0 ? (
@@ -58,12 +75,24 @@ export function Order({ orders }) {
                     <OrderContent>
                         {""}
                         <OrderContainer>Your Order:</OrderContainer>{""}
-                        {orders.map(order => (
-                            <OrderContainer>
-                                <OrderItem>
+                        {orders.map((order, index )=> (
+                            <OrderContainer editable>
+                                <OrderItem
+                                    onClick={() => {
+                                        setOpenFood({ ...order, index });
+                                    }}
+                                >
                                     <div>{order.quantity}</div>
                                     <div>{order.name}</div>
-                                    <div />
+                                    <div
+                                        style={{ cursor: "pointer" }}
+                                        onClick={e => {
+                                            e.stopPropagation();
+                                            deleteItem(index);
+                                        }}
+                                    >
+                                        🗑
+                                        </div>
                                     <div>{formatPrice(getPrice(order))}</div>
                                 </OrderItem>
                                 <DetailItem>
